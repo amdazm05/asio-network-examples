@@ -37,7 +37,15 @@ void Asio_TCP_Server::start_service()
             std::cout<<"Sending Acknowledgement" <<std::endl;
             const std::string msg = "ACK \n";
             //Assuming the socket is open please send an Acknowledgement for the message
-            asio::write(socket,asio::buffer(msg));
+            asio::write(socket,asio::buffer(msg),es);
+            if(es== asio::error::broken_pipe )
+            {
+                std::cout<<"Connection closed, Client has disconnected  ... "<<std::endl;
+                socket.close();
+                socket.release(es);
+                acceptor_.close();
+                break;
+            }
         }
     }
     start_service();
