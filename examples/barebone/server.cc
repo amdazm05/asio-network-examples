@@ -21,7 +21,11 @@ void send_(ip::tcp::socket & socket, const string& message) {
 int main() {
 
       Asio_TCP_Server Server(1234);
-      Server.start_service();
+      char * buffer =  "1321312";
+      
+      Server.AcceptConnection();
+      Server.WriteToClient(buffer,4);
+//       Server.start_service();
 
    return 0;
 }

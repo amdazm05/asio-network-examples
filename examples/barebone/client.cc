@@ -13,8 +13,8 @@ int main()
     // request/message from client
     const string msg = "Hello from Client!\n";
     asio::error_code error;
-    while(1)
-    {
+    // while(1)
+    // {
 
         asio::write(socket, asio::buffer(msg), error);
         if (!error)
@@ -37,6 +37,6 @@ int main()
             const char *data = asio::buffer_cast<const char *>(receive_buffer.data());
             cout << data << endl;
         }
-    }
+    // }
     return 0;
 }
