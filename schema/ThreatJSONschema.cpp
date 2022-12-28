@@ -1,40 +1,53 @@
 #include "ThreatJSONschema.hpp"
 
-void NetworkPacketLogger::parseThreat
+template<class DataAnalysisClass>
+void NetworkPacketLogger<DataAnalysisClass>::PulsedTrackConversion
 (
-            uint64_t currentSystemIteration,
-            uint64_t TOAFirst,
-            uint64_t TOALast,
-            char * Band,
-            uint64_t AOA,
-            uint64_t PW,
-            uint64_t PRI,
-            uint64_t RF
-
+            DataAnalysisClass &analysisObj ,  uint64_t currentIteration
 )
 
 {
-
-    //pushes the track into the vector
-    if(threatCountinList<=listOfreportedThreats.size())
+    uint16_t i=0;
+    for(; i<analysisObj.bandEJ.tracks.size();i++)
     {
-        listOfreportedThreats[threatCountinList].currentSystemIteration = currentSystemIteration;
-        listOfreportedThreats[threatCountinList].TOAFirst= TOAFirst;
-        listOfreportedThreats[threatCountinList].TOALast=TOALast;
-        listOfreportedThreats[threatCountinList].Band = Band;
-        listOfreportedThreats[threatCountinList].AOA =AOA;
-        listOfreportedThreats[threatCountinList].PW = PW;
-        listOfreportedThreats[threatCountinList].PRI =PRI;
-        listOfreportedThreats[threatCountinList].RF = RF;
-        threatCountinList++;
+        listOfreportedThreats[i].currentSystemIteration =   currentIteration;
+        listOfreportedThreats[i].TOAFirst=                  analysisObj.bandEJ.tracks[i].toaFirst;
+        listOfreportedThreats[i].TOALast=                   analysisObj.bandEJ.tracks[i].toaLast;
+        listOfreportedThreats[i].Band =                     "EJ";
+        listOfreportedThreats[i].AOA =                      analysisObj.bandEJ.tracks[i].angle.bearingLast;
+        listOfreportedThreats[i].PW =                       analysisObj.bandEJ.tracks[i].pwAvg;
+        listOfreportedThreats[i].PRI =                      analysisObj.bandEJ.tracks[i].priMean;
+        listOfreportedThreats[i].RF =                       analysisObj.bandEJ.tracks[i].rfAvg;
     }
-    //To keep track of how many tracks we got
-     
+
+    for(uint16_t j =0; j<analysisObj.bandCD.tracks.size();j++)
+    {
+
+        listOfreportedThreats[i].currentSystemIteration =   currentIteration;
+        listOfreportedThreats[i].TOAFirst=                  analysisObj.bandCD.tracks[j].toaFirst;
+        listOfreportedThreats[i].TOALast=                   analysisObj.bandCD.tracks[j].toaLast;
+        listOfreportedThreats[i].Band =                     "CD";
+        listOfreportedThreats[i].AOA =                      analysisObj.bandCD.tracks[j].angle.bearingLast;
+        listOfreportedThreats[i].PW =                       analysisObj.bandCD.tracks[j].pwAvg;
+        listOfreportedThreats[i].PRI =                      analysisObj.bandCD.tracks[j].priMean;
+        listOfreportedThreats[i].RF =                       analysisObj.bandCD.tracks[j].rfAvg;
+        i++;
+    }
+    threatCountinList = i;
+        
 }
 
+template<class DataAnalysisClass>
+void JSONLoggerDelegate<DataAnalysisClass>::CWTrackConversion
+(
+            DataAnalysisClass &analysisObj ,  uint64_t currentIteration
+)
+{
 
+}
 
-void NetworkPacketLogger::tracksConversionToJSON()
+template<class DataAnalysisClass>
+void JSONLoggerDelegate<DataAnalysisClass>::tracksConversionToJSON()
 {
     lengthofString = 0;
     lengthofString+=sprintf(buffer.begin(),"{[");
@@ -42,43 +55,45 @@ void NetworkPacketLogger::tracksConversionToJSON()
     {
         if(i!=(threatCountinList-1))
             lengthofString += sprintf(buffer.begin() + lengthofString, "{\"TOAFirst\":%lld,\"TOALast\":%lld \"Band\":\"%s\",\"AOA\":%lld, \"PW\":%lld,\"PRI\":%lld, \"RF\":%lld},",
-                                      listOfreportedThreats[threatCountinList].currentSystemIteration,
-                                      listOfreportedThreats[threatCountinList].TOAFirst,
-                                      listOfreportedThreats[threatCountinList].TOALast,
-                                      listOfreportedThreats[threatCountinList].Band,
-                                      listOfreportedThreats[threatCountinList].AOA,
-                                      listOfreportedThreats[threatCountinList].PW,
-                                      listOfreportedThreats[threatCountinList].PRI,
-                                      listOfreportedThreats[threatCountinList].RF
+                                      listOfreportedThreats[i].currentSystemIteration,
+                                      listOfreportedThreats[i].TOAFirst,
+                                      listOfreportedThreats[i].TOALast,
+                                      listOfreportedThreats[i].Band,
+                                      listOfreportedThreats[i].AOA,
+                                      listOfreportedThreats[i].PW,
+                                      listOfreportedThreats[i].PRI,
+                                      listOfreportedThreats[i].RF
 
             );
         else
             lengthofString += sprintf(buffer.begin() + lengthofString, "{\"TOAFirst\":%lld,\"TOALast\":%lld \"Band\":\"%s\",\"AOA\":%lld, \"PW\":%lld,\"PRI\":%lld, \"RF\":%lld}]}",
-                                      listOfreportedThreats[threatCountinList].currentSystemIteration,
-                                      listOfreportedThreats[threatCountinList].TOAFirst,
-                                      listOfreportedThreats[threatCountinList].TOALast,
-                                      listOfreportedThreats[threatCountinList].Band,
-                                      listOfreportedThreats[threatCountinList].AOA,
-                                      listOfreportedThreats[threatCountinList].PW,
-                                      listOfreportedThreats[threatCountinList].PRI,
-                                      listOfreportedThreats[threatCountinList].RF);
+                                      listOfreportedThreats[i].currentSystemIteration,
+                                      listOfreportedThreats[i].TOAFirst,
+                                      listOfreportedThreats[i].TOALast,
+                                      listOfreportedThreats[i].Band,
+                                      listOfreportedThreats[i].AOA,
+                                      listOfreportedThreats[i].PW,
+                                      listOfreportedThreats[i].PRI,
+                                      listOfreportedThreats[i].RF);
     }
 
 }
 
-
-void NetworkPacketLogger::clearBuffer()
+template<class DataAnalysisClass>
+void JSONLoggerDelegate<DataAnalysisClass>::clearBuffer()
 {
     listOfreportedThreats = {};
     lengthofString  = 0;
 }
 
-inline const char * NetworkPacketLogger::getBuffer() const
+template<class DataAnalysisClass>
+char * JSONLoggerDelegate<DataAnalysisClass>::getBuffer() 
 {
     return buffer.data();
 }
 
-inline const size_t NetworkPacketLogger::getBufferSize()
+template<class DataAnalysisClass>
+inline  size_t JSONLoggerDelegate<DataAnalysisClass>::getBufferSize()
 {
     return lengthofString;
 }

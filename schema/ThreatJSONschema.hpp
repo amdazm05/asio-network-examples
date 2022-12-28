@@ -3,7 +3,7 @@
 #include <iostream>
 #include <array>
 
-struct Threats
+struct PulsedThreats
 {
   
     uint64_t currentSystemIteration;
@@ -16,29 +16,44 @@ struct Threats
     uint64_t RF;
 };
 
-class NetworkPacketLogger
+struct CWThreats
+{
+  
+    uint64_t currentSystemIteration;
+    char * Band;
+    uint64_t Angle;
+    uint64_t tA;
+    uint64_t tb;
+    uint64_t tc;
+    uint64_t tD;
+    uint64_t RF;
+};
+
+// This can be set as 
+template<class DataAnalysisClass>
+class JSONLoggerDelegate
 {
     public:
-        NetworkPacketLogger();
-        void parseThreat
+        JSONLoggerDelegate();
+        
+        void PulsedTrackConversion
         (
-            uint64_t currentSystemIteration,
-            uint64_t TOAFirst,
-            uint64_t TOALast,
-            char * Band,
-            uint64_t AOA,
-            uint64_t PW,
-            uint64_t PRI,
-            uint64_t RF
+            DataAnalysisClass &analysisObj ,  uint64_t currentIteration
+        );
+
+        void CWTrackConversion
+        (
+            DataAnalysisClass &analysisObj ,  uint64_t currentIteration
         );
 
         void tracksConversionToJSON();
         void clearBuffer();
-        const char * getBuffer() const;
-        const size_t getBufferSize();
+         char * getBuffer() ;
+         size_t getBufferSize();
     private:
         int lengthofString=0;
-        std::array<Threats,100>  listOfreportedThreats;
+        std::array<PulsedThreats,50>  listOfreportedThreats;
+        std::array<PulsedThreats,50>  listOfreportedCWThreats;
         int threatCountinList=0;
         //1MB in JSON packet
         std::array<char, 1<<20 > buffer;
