@@ -1,6 +1,7 @@
 #ifndef _TJSON
 #define _TJSON
 #include <iostream>
+#include <vector>
 #include <array>
 
 struct PulsedThreats
@@ -22,15 +23,18 @@ struct CWThreats
     uint64_t currentSystemIteration;
     char * Band;
     uint64_t Angle;
+    uint64_t Quad;
+    uint64_t heading;
     uint64_t tA;
     uint64_t tb;
     uint64_t tc;
     uint64_t tD;
+    uint64_t cwGainStage;
     uint64_t RF;
 };
 
 // This can be set as 
-template<class DataAnalysisClass>
+template<class DataAnalysisClass, class TrackDefaultClass>
 class JSONLoggerDelegate
 {
     public:
@@ -43,7 +47,7 @@ class JSONLoggerDelegate
 
         void CWTrackConversion
         (
-            DataAnalysisClass &analysisObj ,  uint64_t currentIteration
+            std::vector<TrackDefaultClass> &tracks ,  uint64_t currentIteration
         );
 
         void tracksConversionToJSON();
@@ -53,8 +57,9 @@ class JSONLoggerDelegate
     private:
         int lengthofString=0;
         std::array<PulsedThreats,50>  listOfreportedThreats;
-        std::array<PulsedThreats,50>  listOfreportedCWThreats;
+        std::array<CWThreats,50>  listOfreportedCWThreats;
         int threatCountinList=0;
+        int CWthreatCountinList=0;
         //1MB in JSON packet
         std::array<char, 1<<20 > buffer;
 };

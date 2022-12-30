@@ -1,7 +1,7 @@
 #include "ThreatJSONschema.hpp"
 
-template<class DataAnalysisClass>
-void NetworkPacketLogger<DataAnalysisClass>::PulsedTrackConversion
+template<class DataAnalysisClass,class TrackDefaultClass>
+void JSONLoggerDelegate<DataAnalysisClass,TrackDefaultClass>::PulsedTrackConversion
 (
             DataAnalysisClass &analysisObj ,  uint64_t currentIteration
 )
@@ -37,20 +37,34 @@ void NetworkPacketLogger<DataAnalysisClass>::PulsedTrackConversion
         
 }
 
-template<class DataAnalysisClass>
-void JSONLoggerDelegate<DataAnalysisClass>::CWTrackConversion
+template<class DataAnalysisClass, class TrackDefaultClass>
+void JSONLoggerDelegate<DataAnalysisClass,TrackDefaultClass>::CWTrackConversion
 (
-            DataAnalysisClass &analysisObj ,  uint64_t currentIteration
+            std::vector<TrackDefaultClass> &tracks ,  uint64_t currentIteration
 )
 {
-
+    for (uint32_t i = 0; i < tracks.size(); i++)
+	{
+		        TrackDefaultClass &track = tracks[i];
+	            listOfreportedCWThreats[i].Angle=track.analysisObj.angle.curAngle;
+				listOfreportedCWThreats[i].Quad=track.angle.curQuadrant;
+                listOfreportedCWThreats[i].heading = track.power.angle.bearingDisplay;
+                listOfreportedCWThreats[i].cwGainStage = track.power.cwGainStage;
+                listOfreportedCWThreats[i].tA= track.power.avgPA;
+                listOfreportedCWThreats[i].tb= track.power.avgPB;
+                listOfreportedCWThreats[i].Band = "CW";
+                listOfreportedCWThreats[i].tc= track.power.avgPC;
+                listOfreportedCWThreats[i].td= track.power.avgPD;
+				listOfreportedCWThreats[i].RF=track.rf.accumulateRf[0].rfAvg;
+    }
+    CWthreatCountinList = tracks.size();
 }
 
-template<class DataAnalysisClass>
-void JSONLoggerDelegate<DataAnalysisClass>::tracksConversionToJSON()
+template<class DataAnalysisClass,class TrackDefaultClass>
+void JSONLoggerDelegate<DataAnalysisClass,TrackDefaultClass>::tracksConversionToJSON()
 {
     lengthofString = 0;
-    lengthofString+=sprintf(buffer.begin(),"{[");
+    lengthofString+=sprintf(buffer.begin(),"\"{ PulsedTracks : \"{[");
     for(int i=0; i<threatCountinList;i++)
     {
         if(i!=(threatCountinList-1))
@@ -66,7 +80,7 @@ void JSONLoggerDelegate<DataAnalysisClass>::tracksConversionToJSON()
 
             );
         else
-            lengthofString += sprintf(buffer.begin() + lengthofString, "{\"TOAFirst\":%lld,\"TOALast\":%lld \"Band\":\"%s\",\"AOA\":%lld, \"PW\":%lld,\"PRI\":%lld, \"RF\":%lld}]}",
+            lengthofString += sprintf(buffer.begin() + lengthofString, "{\"TOAFirst\":%lld,\"TOALast\":%lld \"Band\":\"%s\",\"AOA\":%lld, \"PW\":%lld,\"PRI\":%lld, \"RF\":%lld}]",
                                       listOfreportedThreats[i].currentSystemIteration,
                                       listOfreportedThreats[i].TOAFirst,
                                       listOfreportedThreats[i].TOALast,
@@ -77,23 +91,57 @@ void JSONLoggerDelegate<DataAnalysisClass>::tracksConversionToJSON()
                                       listOfreportedThreats[i].RF);
     }
 
+    lengthofString+=sprintf(buffer.begin(),"\"{ PulsedTracks : \"{[");
+    for(int i=0; i<CWthreatCountinList;i++)
+    {
+        if(i!=(CWthreatCountinList-1))
+            lengthofString += sprintf(buffer.begin() + lengthofString, "{\"Band\":%s,\"Angle\":%lld \"Quad\":\"%lld\",\"Heading\":%lld, \"RF\":%lld,\"GS\":%lld, \"pA\":%lld, \"pB\":%lld, \"pC\":%lld,\"pD\":%lld},",
+                                    listOfreportedCWThreats[i].Band,
+                                    listOfreportedCWThreats[i].Angle,
+                                    listOfreportedCWThreats[i].Quad,
+                                    listOfreportedCWThreats[i].heading, 
+                                    listOfreportedCWThreats[i].RF
+                                    listOfreportedCWThreats[i].cwGainStage,
+                                    listOfreportedCWThreats[i].tA,
+                                    listOfreportedCWThreats[i].tb,
+                                    listOfreportedCWThreats[i].tc,
+                                    listOfreportedCWThreats[i].td,
+
+            );
+        else
+            lengthofString += sprintf(buffer.begin() + lengthofString, "{\"Band\":%s,\"Angle\":%lld \"Quad\":\"%lld\",\"Heading\":%lld, \"RF\":%lld,\"GS\":%lld, \"pA\":%lld, \"pB\":%lld, \"pC\":%lld,\"pD\":%lld}]",
+                                    listOfreportedCWThreats[i].Band,
+                                    listOfreportedCWThreats[i].Angle,
+                                    listOfreportedCWThreats[i].Quad,
+                                    listOfreportedCWThreats[i].heading, 
+                                    listOfreportedCWThreats[i].RF
+                                    listOfreportedCWThreats[i].cwGainStage,
+                                    listOfreportedCWThreats[i].tA,
+                                    listOfreportedCWThreats[i].tb,
+                                    listOfreportedCWThreats[i].tc,
+                                    listOfreportedCWThreats[i].td,
+            );
+    }
+
 }
 
-template<class DataAnalysisClass>
-void JSONLoggerDelegate<DataAnalysisClass>::clearBuffer()
+template<class DataAnalysisClass,class TrackDefaultClass>
+void JSONLoggerDelegate<DataAnalysisClass,TrackDefaultClass>::clearBuffer()
 {
     listOfreportedThreats = {};
     lengthofString  = 0;
+    threatCountinList = 0;
+    CWthreatCountinList = 0;
 }
 
-template<class DataAnalysisClass>
-char * JSONLoggerDelegate<DataAnalysisClass>::getBuffer() 
+template<class DataAnalysisClass,class TrackDefaultClass>
+char * JSONLoggerDelegate<DataAnalysisClass,TrackDefaultClass>::getBuffer() 
 {
     return buffer.data();
 }
 
-template<class DataAnalysisClass>
-inline  size_t JSONLoggerDelegate<DataAnalysisClass>::getBufferSize()
+template<class DataAnalysisClass, class TrackDefaultClass>
+inline  size_t JSONLoggerDelegate<DataAnalysisClass, TrackDefaultClass>::getBufferSize()
 {
     return lengthofString;
 }
