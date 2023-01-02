@@ -25,8 +25,8 @@ int main() {
       
       while(1)
       {
-       Server.AcceptConnection();
-       Server.WriteToClient(buffer,4);
+              Server.AcceptConnection();
+              Server.WriteToClient(buffer,4);
       }
 //       Server.start_service();
 
