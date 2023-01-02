@@ -21,7 +21,7 @@ class Asio_TCP_Server
         Asio_TCP_Server(int PortNumToBind );
         void start_service();
         void AcceptConnection();
-        void DeallocateConnection();
+        void DeallocateConnection(asio::error_code &es);
         void WriteToClient(char * buffer, size_t sizeofBuffer);
         ~Asio_TCP_Server();
     private:
