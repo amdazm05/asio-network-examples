@@ -37,10 +37,7 @@ void Asio_TCP_Server::start_service()
             if(es== asio::error::broken_pipe )
             {
                 std::cout<<"Connection closed, Client has disconnected  ... "<<std::endl;
-                socket_->close();
-                socket_->release(es);
-                acceptor_->close();
-                DeallocateConnection();
+                DeallocateConnection(es);
                 break;
             }
         }
@@ -50,18 +47,15 @@ void Asio_TCP_Server::start_service()
 
 void Asio_TCP_Server::WriteToClient(char * buffer, size_t sizeofBuffer)
 {
-    std::copy(buffer, buffer + sizeofBuffer , _broadcastbuffer.begin());
-    std::cout<<_broadcastbuffer.data()<<std::endl;
-
-    asio::error_code es;
-    asio::write(*socket_,asio::buffer(_broadcastbuffer),es);
-    if(es == asio::error::broken_pipe )
+    if(isServerConnected)
     {
-        std::cout<<"Connection closed, Client has disconnected  ... "<<std::endl;
-        socket_->close();
-        socket_->release(es);
-        acceptor_->close();
-        DeallocateConnection();
+        asio::error_code es;
+        asio::write(*socket_,asio::buffer(buffer,sizeofBuffer),es);
+        if(es == asio::error::broken_pipe )
+        {
+            std::cout<<"Connection closed, Client has disconnected  ... "<<std::endl;
+            DeallocateConnection(es);
+        }
     }
 }
 
@@ -70,17 +64,38 @@ void Asio_TCP_Server::WriteToClient(char * buffer, size_t sizeofBuffer)
 
 void Asio_TCP_Server::AcceptConnection()
 {
-    io_service =     new asio::io_service();
-    acceptor_  =     new asio::ip::tcp::acceptor(*io_service, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), portNum ));
-    socket_    =     new asio::ip::tcp::socket(*io_service);
-    acceptor_->accept(*socket_);
+    if(!isServerConnected)
+    {
+        io_service =     new asio::io_service();
+        acceptor_  =     new asio::ip::tcp::acceptor(*io_service, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), portNum ));
+        socket_    =     new asio::ip::tcp::socket(*io_service);
+        isServerConnected = true;
+        acceptor_->accept(*socket_);
+        return;
+    }
+
+    else
+    {
+        return;
+    }
 }
 
-void Asio_TCP_Server::DeallocateConnection()
+void Asio_TCP_Server::DeallocateConnection(asio::error_code &es)
 {
-    delete [] acceptor_;
-    delete [] io_service;
-    delete [] socket_;
+    if(isServerConnected)
+    {
+        socket_->close();
+        socket_->release(es);
+        acceptor_->close();
+        isServerConnected = false;
+        // delete [] io_service;
+        return;
+    }
+    else
+    {
+        return;
+    }
+    
 }
 
 Asio_TCP_Server::~Asio_TCP_Server()

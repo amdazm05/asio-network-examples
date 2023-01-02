@@ -23,8 +23,11 @@ int main() {
       Asio_TCP_Server Server(1234);
       char * buffer =  "1321312";
       
-      Server.AcceptConnection();
-      Server.WriteToClient(buffer,4);
+      while(1)
+      {
+       Server.AcceptConnection();
+       Server.WriteToClient(buffer,4);
+      }
 //       Server.start_service();
 
    return 0;
