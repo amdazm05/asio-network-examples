@@ -20,6 +20,7 @@ class Asio_TCP_Server
         Asio_TCP_Server() = delete;
         Asio_TCP_Server(int PortNumToBind );
         void start_service();
+        char * listen_and_reply_once(char * bufferToWrite, size_t sizeofBufferToWrite);
         void AcceptConnection();
         void DeallocateConnection(asio::error_code &es);
         void WriteToClient(char * buffer, size_t sizeofBuffer);
@@ -27,9 +28,11 @@ class Asio_TCP_Server
     private:
         int portNum;
         bool isServerConnected;
-        bool isThereAnyNewData;        
-        asio::streambuf _receptionbuffer;
+        bool isThereAnyNewData;     
+
         std::array<char , 1<<16> _broadcastbuffer;
+        std::array<char , 1<<16> _receptionbuffer;
+        std::size_t receptionByteCount;
 
         asio::io_service *io_service;
         asio::ip::tcp::socket *socket_;

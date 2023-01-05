@@ -59,6 +59,27 @@ void Asio_TCP_Server::WriteToClient(char * buffer, size_t sizeofBuffer)
     }
 }
 
+char* Asio_TCP_Server::listen_and_reply_once(char * bufferToWrite, size_t sizeofBufferToWrite)
+{
+    asio::error_code es;
+    receptionByteCount = socket_->read_some(asio::buffer(_receptionbuffer), es);
+    if (es && es != asio::error::eof)
+    {
+        std::cout << "receive failed: " << es.message() << std::endl;
+        DeallocateConnection(es);
+        return nullptr;
+    }
+
+    asio::write(*socket_,asio::buffer(bufferToWrite,sizeofBufferToWrite),es);
+    if(es == asio::error::broken_pipe )
+    {
+        std::cout<<"Connection closed, Client has disconnected  ... "<<std::endl;
+        DeallocateConnection(es);
+    }
+
+    return _receptionbuffer.data();
+}
+
 
 
 
