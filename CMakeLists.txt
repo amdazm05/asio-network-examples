@@ -24,13 +24,6 @@ IF (WIN32)
             ws2_32
             wsock32
         )
-ELSE()
-    target_link_libraries(
-        ${PROJECT_NAME}
-        PUBLIC
-        ws2_32
-        wsock32
-    )
 
 ENDIF()
 
