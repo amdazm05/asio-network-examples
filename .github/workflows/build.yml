@@ -1,0 +1,23 @@
+name: Build
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        compiler: [gcc, clang]
+        platform: [x86, arm]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake g++
+    - name: Build
+      run: |
+        mkdir build
+        cd build
+        cmake ..
+        make

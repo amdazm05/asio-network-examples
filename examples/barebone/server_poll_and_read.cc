@@ -11,10 +11,9 @@ int main()
 
     Asio_TCP_Server Server(1234);
     char *buffer = "1321312";
-
+    Server.ListenForConnections();
     while (1)
     {
-        Server.ListenForConnections();
         Server.AcceptConnection();
         Server.listen_and_reply_once(buffer, 4);
     }
