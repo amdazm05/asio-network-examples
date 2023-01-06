@@ -1,4 +1,4 @@
-### Example of a Simple synchronus Server Client model
+### A Networking Module based on standalone ASIO 
 
 To compile follow these steps
 ```
