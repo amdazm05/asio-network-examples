@@ -29,20 +29,23 @@ class Asio_TCP_Server
         void DeallocateConnection(asio::error_code &es);
         void WriteToClient(char * buffer, size_t sizeofBuffer) noexcept;
         void ReadFromClient();
+        void SetBlockingCall(bool condition);
         ~Asio_TCP_Server();
     private:
         int portNum;
         bool isServerConnected;
         bool isThereAnyNewData;    
+        bool isBlockingMode;
         int  backlogsize; 
 
         std::array<char , 1<<16> _broadcastbuffer;
         std::array<char , 1<<16> _receptionbuffer;
         std::size_t receptionByteCount;
-
-        asio::io_service *io_service;
-        asio::ip::tcp::socket *socket_;
-        asio::ip::tcp::acceptor *acceptor_;
+        
+        
+        std::shared_ptr<asio::io_service> io_service;
+        std::shared_ptr<asio::ip::tcp::socket> socket_;
+        std::shared_ptr<asio::ip::tcp::acceptor> acceptor_;
         std::vector<asio::ip::tcp::socket> listOfclients;
 };
 

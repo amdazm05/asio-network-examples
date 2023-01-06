@@ -4,7 +4,9 @@ Asio_TCP_Server::Asio_TCP_Server(int PortNum):
     portNum(PortNum)
 {
         isServerConnected= false;
-        isThereAnyNewData= false; 
+        isThereAnyNewData= false;
+        // By default this is blocking
+        isBlockingMode = true; 
 }
 
 Asio_TCP_Server::Asio_TCP_Server(int PortNumToBind, int BackLogsize): Asio_TCP_Server(PortNumToBind)
@@ -35,56 +37,76 @@ void Asio_TCP_Server::WriteToClient(char * buffer, size_t sizeofBuffer) noexcept
 
 char* Asio_TCP_Server::listen_and_reply_once(char * bufferToWrite, size_t sizeofBufferToWrite) noexcept
 {
+    
     asio::error_code es;
-
     try
     {
-        receptionByteCount = socket_->read_some(asio::buffer(_receptionbuffer), es);
-        if (es && es != asio::error::eof)
+        if(isServerConnected)
         {
-            DeallocateConnection(es);
-            throw std::runtime_error("TCP Server: Socket Closed");
+            receptionByteCount = listOfclients[0].read_some(asio::buffer(_receptionbuffer), es);
+            if (es && es != asio::error::eof)
+            {
+                isServerConnected =false;
+                listOfclients.pop_back();
+                throw std::runtime_error("TCP Server: Socket Closed");
+            }
         }
+            
     }
     catch(const std::exception& e)
     {
         std::cerr << e.what() << '\n';
+        isServerConnected = false;
         return nullptr;
     }
     
     try
     {
-        asio::write(*socket_,asio::buffer(bufferToWrite,sizeofBufferToWrite),es);
-        if(es == asio::error::broken_pipe )
-        {
-            DeallocateConnection(es);
-            throw std::runtime_error("TCP Server: Broken Pipe, Write failed, Deallocated Connection");
-        }
-
-        return _receptionbuffer.data();
+        if(isServerConnected)
+        {   
+            asio::write(listOfclients[0],asio::buffer(bufferToWrite,sizeofBufferToWrite),es);
+            if(es == asio::error::broken_pipe )
+            {
+                throw std::runtime_error("TCP Server: Broken Pipe, Write failed, Deallocated Connection");
+            }
+        }            
     }
     catch(const std::exception& e)
     {
         std::cerr << e.what() << '\n';
+        isServerConnected = false;
         return nullptr;
     }
 
+    return _receptionbuffer.data();
 }
-
-
 
 
 void Asio_TCP_Server::AcceptConnection() noexcept
 {
     try
     {
-        if(acceptor_!=nullptr)
+        if((acceptor_.get()!=nullptr))
         {
-            if(!isServerConnected)
-            {
-                acceptor_->accept(*socket_);
-                isServerConnected = true;
-            }
+                socket_ = std::shared_ptr<asio::ip::tcp::tcp::socket>(new asio::ip::tcp::tcp::socket(*io_service));
+                acceptor_->non_blocking(isBlockingMode);
+                try
+                {
+                    asio::error_code accept_error;
+                    acceptor_->accept(*socket_);
+                    isServerConnected = true;
+                    listOfclients.emplace_back(std::move(*socket_));
+                    socket_.reset();
+                }
+
+                catch(const std::exception& e)
+                {
+                    socket_.reset();
+                }
+        }
+        else if(isServerConnected)
+        {
+            // Do nothing pretty much
         }
         else
         {
@@ -120,8 +142,10 @@ void Asio_TCP_Server::ListenForConnections()
 {
     if(!isServerConnected)
     {
-        io_service =     new asio::io_service();
-        acceptor_  =     new asio::ip::tcp::acceptor(*io_service, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), portNum ));
+        io_service = std::shared_ptr<asio::io_service>(new asio::io_service());
+        acceptor_  = std::shared_ptr<asio::ip::tcp::acceptor>(new asio::ip::tcp::acceptor(*io_service, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), portNum)));
+        // Listen puts the accpetor into a state where it listens for multiple connections
+        acceptor_->non_blocking(isBlockingMode);
         acceptor_->listen(backlogsize);
         return;
     }
