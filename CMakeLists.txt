@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0)
-project(basr_tcp)
+project(tcp)
 
 include_directories(
     ${PROJECT_SOURCE_DIR}/libs/asio/include
@@ -16,6 +16,18 @@ target_include_directories(
     PUBLIC
     ${PROJECT_SOURCE_DIR}/include/
 )
+
+IF (WIN32)
+    target_link_libraries(
+            ${PROJECT_NAME}
+            PUBLIC
+            ws2_32
+            wsock32
+        )
+
+ENDIF()
+
+    
 
 add_executable(
     server
@@ -34,6 +46,11 @@ add_executable(
     ./examples/barebone/client.cc
 )
 
+target_link_libraries(
+    client
+PUBLIC
+    ${PROJECT_NAME}
+)
 
 add_executable(
     client_poll_example
@@ -44,7 +61,6 @@ target_link_libraries(
     client_poll_example
 PUBLIC
     ${PROJECT_NAME}
-
 )
 
 add_executable(
@@ -56,5 +72,4 @@ target_link_libraries(
     server_poll_and_read
 PUBLIC
     ${PROJECT_NAME}
-
 )
