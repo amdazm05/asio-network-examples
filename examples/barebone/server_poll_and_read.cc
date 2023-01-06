@@ -14,6 +14,7 @@ int main()
 
     while (1)
     {
+        Server.ListenForConnections();
         Server.AcceptConnection();
         Server.listen_and_reply_once(buffer, 4);
     }
