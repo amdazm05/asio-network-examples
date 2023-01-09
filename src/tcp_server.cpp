@@ -21,7 +21,7 @@ void Asio_TCP_Server::WriteToClient(char * buffer, size_t sizeofBuffer) noexcept
         asio::error_code es;
         try
         {
-            asio::write(*socket_, asio::buffer(buffer, sizeofBuffer), es);
+            asio::write(listOfclients[0], asio::buffer(buffer, sizeofBuffer), es);
             if (es == asio::error::broken_pipe)
             {
                 DeallocateConnection(es);
@@ -33,6 +33,38 @@ void Asio_TCP_Server::WriteToClient(char * buffer, size_t sizeofBuffer) noexcept
             std::cerr << e.what() << '\n';
         }
     }
+}
+
+
+std::size_t  Asio_TCP_Server::ReadFromClient(char * buffer) noexcept
+{
+    receptionByteCount =-1;   
+    if(isServerConnected)
+    {
+        asio::error_code es;
+        try
+        {
+            receptionByteCount= listOfclients[0].read_some(asio::buffer(_receptionbuffer), es);
+            if (es && es != asio::error::eof)
+            {
+                isServerConnected =false;
+                listOfclients.pop_back();
+                throw std::runtime_error("TCP Server: Socket Closed");
+            }
+            buffer = _receptionbuffer.data();
+            if(receptionByteCount>0)
+            {
+                std::cout<<buffer<<std::endl;
+            }
+        }
+        catch (const std::exception &e)
+        {
+            std::cerr << e.what() << '\n';
+            receptionByteCount = -1;
+        }
+    }
+   
+    return receptionByteCount;
 }
 
 char* Asio_TCP_Server::listen_and_reply_once(char * bufferToWrite, size_t sizeofBufferToWrite) noexcept
