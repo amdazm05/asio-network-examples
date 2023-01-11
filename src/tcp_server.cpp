@@ -187,6 +187,11 @@ void Asio_TCP_Server::ListenForConnections()
     }
 }
 
+bool Asio_TCP_Server::GetServerConnectionStatus()
+{
+    return isServerConnected;
+}
+
 Asio_TCP_Server::~Asio_TCP_Server()
 {
 

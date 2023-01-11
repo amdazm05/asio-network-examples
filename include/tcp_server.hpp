@@ -29,8 +29,8 @@ class Asio_TCP_Server
         void DeallocateConnection(asio::error_code &es);
         void WriteToClient(char * buffer, size_t sizeofBuffer) noexcept;
         std::size_t  ReadFromClient(char * buffer) noexcept;
-        void ReadFromClient();
         void SetBlockingCall(bool condition);
+        bool GetServerConnectionStatus();
         ~Asio_TCP_Server();
     private:
         int portNum;
