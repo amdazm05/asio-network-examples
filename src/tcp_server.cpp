@@ -50,7 +50,7 @@ std::size_t  Asio_TCP_Server::ReadFromClient(char * buffer) noexcept
                 isServerConnected =false;
                 listOfclients.pop_back();
                 throw std::runtime_error("TCP Server: Socket Closed");
-            }
+            }		
             buffer = _receptionbuffer.data();
             if(receptionByteCount>0)
             {
@@ -118,7 +118,7 @@ void Asio_TCP_Server::AcceptConnection() noexcept
 {
     try
     {
-        if((acceptor_.get()!=nullptr))
+        if((acceptor_.get()!=nullptr && !isServerConnected))
         {
                 socket_ = std::shared_ptr<asio::ip::tcp::tcp::socket>(new asio::ip::tcp::tcp::socket(*io_service));
                 try
@@ -185,6 +185,11 @@ void Asio_TCP_Server::ListenForConnections()
     {
         return;
     }
+}
+
+std::array<char , 1<<16> * Asio_TCP_Server::GetReadBufferPointer()
+{
+	return &(_receptionbuffer);
 }
 
 bool Asio_TCP_Server::GetServerConnectionStatus()
