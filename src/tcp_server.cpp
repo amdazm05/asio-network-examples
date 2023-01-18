@@ -126,7 +126,7 @@ void Asio_TCP_Server::AcceptConnection() noexcept
 {
     try
     {
-        if((acceptor_.get()!=nullptr)  )
+        if((acceptor_.get()!=nullptr) && !isServerConnected)
         {   
                 socket_ = std::shared_ptr<asio::ip::tcp::tcp::socket>(new asio::ip::tcp::tcp::socket(*io_service));
                 try
