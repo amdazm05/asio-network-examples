@@ -1,5 +1,5 @@
 #include <tcp_server.hpp>
-
+#define EXCEPTIONS 0
 Asio_TCP_Server::Asio_TCP_Server(int PortNum):
     portNum(PortNum)
 {
@@ -31,7 +31,9 @@ void Asio_TCP_Server::WriteToClient(char * buffer, size_t sizeofBuffer) noexcept
         }
         catch (const std::exception &e)
         {
+            #if EXCEPTIONS ==1
             std::cerr << e.what() << '\n';
+            #endif
         }
     }
 }
@@ -61,7 +63,9 @@ std::size_t  Asio_TCP_Server::ReadFromClient(char * buffer) noexcept
         }
         catch (const std::exception &e)
         {
+            #if EXCEPTIONS ==1
             std::cerr << e.what() << '\n';
+            #endif
             receptionByteCount = -1;
         }
     }
@@ -107,7 +111,9 @@ char* Asio_TCP_Server::listen_and_reply_once(char * bufferToWrite, size_t sizeof
     }
     catch(const std::exception& e)
     {
+        #if EXCEPTIONS ==1
         std::cerr << e.what() << '\n';
+        #endif
         isServerConnected = false;
         return nullptr;
     }
@@ -152,7 +158,9 @@ void Asio_TCP_Server::AcceptConnection() noexcept
     }
     catch(const std::exception& e)
     {
+        #if EXCEPTIONS ==1
         std::cerr << e.what() << '\n';
+        #endif
     }
     
     return;
