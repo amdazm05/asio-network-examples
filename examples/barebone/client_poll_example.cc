@@ -18,19 +18,10 @@ int main()
     asio::error_code error;
     file.read(msg.begin(),1855);
 
-    asio::write(socket, asio::buffer(msg,1855), error);
-    if (!error)
-    {
-        cout << "Client sent hello message!" << endl;
-    }
-    else
-    {
-        cout << "send failed: " << error.message() << endl;
-    }
     char buff[]= "Hello";
     while(1)
     {
-        asio::write(socket, asio::buffer(buff,4), error);
+        socket.write_some( asio::buffer(buff,4), error);
         if (!error)
         {
             cout << "Client sent hello message!" << endl;

@@ -25,15 +25,20 @@ void Asio_TCP_Server::WriteToClient(char * buffer, size_t sizeofBuffer) noexcept
             listOfclients[0].write_some(asio::buffer(buffer, sizeofBuffer), es);
             if (es == asio::error::broken_pipe)
             {
-                DeallocateConnection(es);
+                // DeallocateConnection(es);
+                isServerConnected = false;
                 throw std::runtime_error("TCP Server: Broken Pipe, Write failed, Deallocated Connection");
             }
         }
         catch (const std::exception &e)
         {
-            #if EXCEPTIONS ==1
+            // #if EXCEPTIONS ==1
             std::cerr << e.what() << '\n';
-            #endif
+            DeallocateConnection(es);
+            ListenForConnections();
+            AcceptConnection();
+
+            // #endif
         }
     }
 }
@@ -47,12 +52,11 @@ std::size_t  Asio_TCP_Server::ReadFromClient(char * buffer) noexcept
         asio::error_code es;
         try
         {
-            // listOfclients[0].non_blocking(isBlockingMode);
+            // listOfclients[0].native_non_blocking(false);
             receptionByteCount= listOfclients[0].read_some(asio::buffer(_receptionbuffer), es);
-            if (es && es != asio::error::eof)
+            if (es && es == asio::error::eof)
             {
-                if(listOfclients[0].is_open())
-                    isServerConnected =false;
+                isServerConnected =false;
                 listOfclients.pop_back();
                 throw std::runtime_error("TCP Server: Nothing to Read");
             }		
@@ -63,9 +67,8 @@ std::size_t  Asio_TCP_Server::ReadFromClient(char * buffer) noexcept
         }
         catch (const std::exception &e)
         {
-            #if EXCEPTIONS ==1
             std::cerr << e.what() << '\n';
-            #endif
+ 
             receptionByteCount = -1;
         }
     }
@@ -190,7 +193,7 @@ void Asio_TCP_Server::ListenForConnections()
         io_service = std::shared_ptr<asio::io_service>(new asio::io_service());
         acceptor_  = std::shared_ptr<asio::ip::tcp::acceptor>(new asio::ip::tcp::acceptor(*io_service, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), portNum)));
         // Listen puts the accpetor into a state where it listens for multiple connections
-        acceptor_->non_blocking(isBlockingMode);
+        acceptor_->non_blocking(true);
         acceptor_->listen(backlogsize);
         return;
     }
