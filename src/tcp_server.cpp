@@ -47,19 +47,27 @@ std::size_t  Asio_TCP_Server::ReadFromClient(char * buffer) noexcept
         asio::error_code es;
         try
         {
-            // listOfclients[0].non_blocking(isBlockingMode);
-            receptionByteCount= listOfclients[0].read_some(asio::buffer(_receptionbuffer), es);
-            if (es && es != asio::error::eof)
+            if(listOfclients[0].available())
             {
-                if(listOfclients[0].is_open())
+                std::cout<<"I've read something "<<listOfclients[0].available()<<std::endl;
+                receptionByteCount= listOfclients[0].read_some(asio::buffer(_receptionbuffer), es);
+                if (es && es == asio::error::eof)
+                {
                     isServerConnected =false;
-                listOfclients.pop_back();
-                throw std::runtime_error("TCP Server: Nothing to Read");
-            }		
-            buffer = _receptionbuffer.data();
-            if(receptionByteCount>0)
-            {
+                    listOfclients.pop_back();
+                    throw std::runtime_error("TCP Server: Nothing to Read");
+                }		
+                buffer = _receptionbuffer.data();
+                if(receptionByteCount>0)
+                {
+                }
             }
+
+            else 
+            {
+                // std::cout<<"Nothing to read"<<std::endl;
+            }
+            
         }
         catch (const std::exception &e)
         {
@@ -143,6 +151,8 @@ void Asio_TCP_Server::AcceptConnection() noexcept
                     option_linger.timeout(1000);
                     socket_->set_option(option_linger);
 
+                    socket_->non_blocking(true);
+                    
                     isServerConnected = true;
                     listOfclients.emplace_back(std::move(*socket_));
                     socket_.reset();
