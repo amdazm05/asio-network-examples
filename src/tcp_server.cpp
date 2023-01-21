@@ -1,5 +1,5 @@
 #include <tcp_server.hpp>
-#define EXCEPTIONS 0
+#define EXCEPTIONS 1
 Asio_TCP_Server::Asio_TCP_Server(int PortNum):
     portNum(PortNum)
 {
@@ -137,6 +137,12 @@ void Asio_TCP_Server::AcceptConnection() noexcept
                     asio::error_code es;
                     asio::socket_base::keep_alive option(true);
                     socket_->set_option(option,es);
+
+                    asio::ip::tcp::socket::linger option_linger;
+                    option_linger.enabled(true);
+                    option_linger.timeout(1000);
+                    socket_->set_option(option_linger);
+
                     isServerConnected = true;
                     listOfclients.emplace_back(std::move(*socket_));
                     socket_.reset();
@@ -149,7 +155,7 @@ void Asio_TCP_Server::AcceptConnection() noexcept
         }
         else if(isServerConnected)
         {
-            // Do nothing pretty much
+
         }
         else
         {

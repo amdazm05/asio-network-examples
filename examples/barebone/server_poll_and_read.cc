@@ -9,17 +9,25 @@ using namespace asio;
 int main()
 {
 
-    Asio_TCP_Server Server(1234);
+    Asio_TCP_Server Server(9000);
     char *buffer = "1321312";
-    char  readbuffer[100] = {};
+    char  *readbuffer;
     Server.ListenForConnections();
+    readbuffer = (char * )Server.GetReadBufferPointer();
+
     while (1)
     {
         Server.AcceptConnection();
         // Server.listen_and_reply_once(buffer, 4);
-        Server.ReadFromClient(readbuffer);
+        int bytesreturned= Server.ReadFromClient(readbuffer);
         Server.WriteToClient(buffer,4);
+        if(bytesreturned>1)
+        {
 
+            std::cout<<bytesreturned<<std::endl;
+            std::cout<<std::endl;
+        }
+       
     }
     //       Server.start_service();
 
