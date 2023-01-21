@@ -38,12 +38,15 @@ class Asio_TCP_Server
         bool isServerConnected;
         bool isThereAnyNewData;    
         bool isBlockingMode;
-        int  backlogsize; 
+        int  backlogsize;
+
+        // Connection poll timer 
+        std::chrono::time_point<std::chrono::system_clock> no_message_read_time;
+        std::chrono::time_point<std::chrono::system_clock> last_message_read_time;
 
         std::array<char , 1<<16> _broadcastbuffer;
         std::array<char , 1<<16> _receptionbuffer;
         std::size_t receptionByteCount;
-        
         
         std::shared_ptr<asio::io_service> io_service;
         std::shared_ptr<asio::ip::tcp::socket> socket_;

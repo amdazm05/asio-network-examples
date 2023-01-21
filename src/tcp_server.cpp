@@ -49,7 +49,6 @@ std::size_t  Asio_TCP_Server::ReadFromClient(char * buffer) noexcept
         {
             if(listOfclients[0].available())
             {
-                std::cout<<"I've read something "<<listOfclients[0].available()<<std::endl;
                 receptionByteCount= listOfclients[0].read_some(asio::buffer(_receptionbuffer), es);
                 if (es && es == asio::error::eof)
                 {
@@ -58,14 +57,21 @@ std::size_t  Asio_TCP_Server::ReadFromClient(char * buffer) noexcept
                     throw std::runtime_error("TCP Server: Nothing to Read");
                 }		
                 buffer = _receptionbuffer.data();
-                if(receptionByteCount>0)
-                {
-                }
+                last_message_read_time = std::chrono::system_clock::now();
             }
 
             else 
             {
-                // std::cout<<"Nothing to read"<<std::endl;
+                no_message_read_time = std::chrono::system_clock::now();
+                size_t timediff = std::chrono::duration_cast<std::chrono::seconds>(no_message_read_time - last_message_read_time).count();
+                std::cout<<timediff<<std::endl;
+                if(timediff > 10)
+                {   
+                    isServerConnected = false;
+                    listOfclients[0].close();
+                    listOfclients.pop_back();
+                }
+
             }
             
         }
@@ -152,7 +158,8 @@ void Asio_TCP_Server::AcceptConnection() noexcept
                     socket_->set_option(option_linger);
 
                     socket_->non_blocking(true);
-                    
+                    last_message_read_time = std::chrono::system_clock::now();
+
                     isServerConnected = true;
                     listOfclients.emplace_back(std::move(*socket_));
                     socket_.reset();
