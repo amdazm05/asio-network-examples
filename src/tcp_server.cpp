@@ -64,8 +64,7 @@ std::size_t  Asio_TCP_Server::ReadFromClient(char * buffer) noexcept
             {
                 no_message_read_time = std::chrono::system_clock::now();
                 size_t timediff = std::chrono::duration_cast<std::chrono::seconds>(no_message_read_time - last_message_read_time).count();
-                std::cout<<timediff<<std::endl;
-                if(timediff > 10)
+                if(timediff > 100)
                 {   
                     isServerConnected = false;
                     listOfclients[0].close();
