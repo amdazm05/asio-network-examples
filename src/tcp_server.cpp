@@ -5,6 +5,7 @@ Asio_TCP_Server::Asio_TCP_Server(int PortNum):
 {
         isServerConnected= false;
         isThereAnyNewData= false;
+        disconnectionTimeout = 100;
         // By default this is blocking
         isBlockingMode = true; 
 }
@@ -64,7 +65,7 @@ std::size_t  Asio_TCP_Server::ReadFromClient(char * buffer) noexcept
             {
                 no_message_read_time = std::chrono::system_clock::now();
                 size_t timediff = std::chrono::duration_cast<std::chrono::seconds>(no_message_read_time - last_message_read_time).count();
-                if(timediff > 100)
+                if(timediff > disconnectionTimeout)
                 {   
                     isServerConnected = false;
                     listOfclients[0].close();
@@ -226,6 +227,11 @@ void Asio_TCP_Server::ListenForConnections()
 std::array<char , 1<<16> * Asio_TCP_Server::GetReadBufferPointer()
 {
 	return &(_receptionbuffer);
+}
+
+void Asio_TCP_Server::SetServerDisconnectionTimeout(int seconds)
+{
+    disconnectionTimeout = seconds;
 }
 
 bool Asio_TCP_Server::GetServerConnectionStatus()

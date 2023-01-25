@@ -32,6 +32,7 @@ class Asio_TCP_Server
 		std::array<char , 1<<16> * GetReadBufferPointer();
         void SetBlockingCall(bool condition);
         bool GetServerConnectionStatus();
+        void SetServerDisconnectionTimeout(int seconds);
         ~Asio_TCP_Server();
     private:
         int portNum;
@@ -39,6 +40,7 @@ class Asio_TCP_Server
         bool isThereAnyNewData;    
         bool isBlockingMode;
         int  backlogsize;
+        int  disconnectionTimeout;
 
         // Connection poll timer 
         std::chrono::time_point<std::chrono::system_clock> no_message_read_time;
