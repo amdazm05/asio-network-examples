@@ -21,6 +21,7 @@ class Asio_TCP_Server
         Asio_TCP_Server() = delete;
         // Alsos delegating constructor
         Asio_TCP_Server(int PortNumToBind);
+        Asio_TCP_Server(int PortNumToBind,int timeOut,int backLogSize);
         Asio_TCP_Server(int PortNumToBind, int BackLogsize);
         char * listen_and_reply_once(char * bufferToWrite, size_t sizeofBufferToWrite) noexcept;
         void AcceptConnection() noexcept;

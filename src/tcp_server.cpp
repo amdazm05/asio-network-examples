@@ -10,32 +10,49 @@ Asio_TCP_Server::Asio_TCP_Server(int PortNum):
         isBlockingMode = true; 
 }
 
+Asio_TCP_Server::Asio_TCP_Server(int PortNumToBind,int timeOut,int backLogSize) :
+    Asio_TCP_Server(PortNumToBind,backLogSize)
+{
+    disconnectionTimeout =timeOut;
+    
+}
 Asio_TCP_Server::Asio_TCP_Server(int PortNumToBind, int BackLogsize): Asio_TCP_Server(PortNumToBind)
 {
+    listOfclients.reserve(backlogsize);
     backlogsize=BackLogsize;
 }
 
 void Asio_TCP_Server::WriteToClient(char * buffer, size_t sizeofBuffer) noexcept
 {
-    if(isServerConnected)
+
+    asio::error_code es;
+    try
     {
-        asio::error_code es;
-        try
+        // listOfclients[0].non_blocking(isBlockingMode);
+        if(listOfclients.size())
         {
-            // listOfclients[0].non_blocking(isBlockingMode);
-            listOfclients[0].write_some(asio::buffer(buffer, sizeofBuffer), es);
-            if (es == asio::error::broken_pipe)
+            for(int i =0 ; i < listOfclients.size();i++)
             {
-                DeallocateConnection(es);
-                throw std::runtime_error("TCP Server: Broken Pipe, Write failed, Deallocated Connection");
+                listOfclients[i].write_some(asio::buffer(buffer, sizeofBuffer), es);
+                if (es == asio::error::broken_pipe)
+                {
+                    DeallocateConnection(es);
+                    throw std::runtime_error("TCP Server: Broken Pipe, Write failed, Deallocated Connection " + listOfclients[i].local_endpoint().address().to_string());
+                }
+                else
+                {
+                    // For completeness
+                }
             }
         }
-        catch (const std::exception &e)
-        {
-            #if EXCEPTIONS ==1
-            std::cerr << e.what() << '\n';
-            #endif
-        }
+        
+        
+    }
+    catch (const std::exception &e)
+    {
+        #if EXCEPTIONS ==1
+        std::cerr << e.what() << '\n';
+        #endif
     }
 }
 
@@ -43,45 +60,55 @@ void Asio_TCP_Server::WriteToClient(char * buffer, size_t sizeofBuffer) noexcept
 std::size_t  Asio_TCP_Server::ReadFromClient(char * buffer) noexcept
 {
     receptionByteCount =-1;   
-    if(isServerConnected)
+    asio::error_code es;
+    try
     {
-        asio::error_code es;
-        try
+        if(listOfclients.size())
         {
-            if(listOfclients[0].available())
+            for(int i= 0 ; i < listOfclients.size() ;i++)
             {
-                receptionByteCount= listOfclients[0].read_some(asio::buffer(_receptionbuffer), es);
-                if (es && es == asio::error::eof)
+                if(listOfclients[0].available())
                 {
-                    isServerConnected =false;
-                    listOfclients.pop_back();
-                    throw std::runtime_error("TCP Server: Nothing to Read");
-                }		
-                buffer = _receptionbuffer.data();
-                last_message_read_time = std::chrono::system_clock::now();
-            }
-
-            else 
-            {
-                no_message_read_time = std::chrono::system_clock::now();
-                size_t timediff = std::chrono::duration_cast<std::chrono::seconds>(no_message_read_time - last_message_read_time).count();
-                if(timediff > disconnectionTimeout)
-                {   
-                    isServerConnected = false;
-                    listOfclients[0].close();
-                    listOfclients.pop_back();
+                    receptionByteCount= listOfclients[0].read_some(asio::buffer(_receptionbuffer), es);
+                    if (es && es == asio::error::eof)
+                    {
+                        isServerConnected =false;
+                        listOfclients.pop_back();
+                        throw std::runtime_error("TCP Server: Nothing to Read");
+                    }		
+                    buffer = _receptionbuffer.data();
+                    last_message_read_time = std::chrono::system_clock::now();
                 }
-
+                else 
+                {
+                    no_message_read_time = std::chrono::system_clock::now();
+                    size_t timediff = std::chrono::duration_cast<std::chrono::seconds>(no_message_read_time - last_message_read_time).count();
+                    if(timediff > disconnectionTimeout)
+                    {   
+                        for(int i=0 ; i < listOfclients.size();i++)
+                        {
+                            receptionByteCount= listOfclients[i].read_some(asio::buffer(_receptionbuffer), es);
+                            if(es == asio::error::eof)
+                            {
+                                throw std::runtime_error("TCP Server: Closing the socket" + listOfclients[i].local_endpoint().address().to_string());
+                            }
+                            listOfclients[i].close();
+                            listOfclients.pop_back();
+                        }
+                    }
+                }
             }
+        }
             
-        }
-        catch (const std::exception &e)
-        {
-            #if EXCEPTIONS ==1
-            std::cerr << e.what() << '\n';
-            #endif
-            receptionByteCount = -1;
-        }
+        
+        
+    }
+    catch (const std::exception &e)
+    {
+        #if EXCEPTIONS ==1
+        std::cerr << e.what() << '\n';
+        #endif
+        receptionByteCount = -1;
     }
    
     return receptionByteCount;
@@ -140,7 +167,7 @@ void Asio_TCP_Server::AcceptConnection() noexcept
 {
     try
     {
-        if((acceptor_.get()!=nullptr) && !isServerConnected)
+        if((acceptor_.get()!=nullptr))
         {   
                 socket_ = std::shared_ptr<asio::ip::tcp::tcp::socket>(new asio::ip::tcp::tcp::socket(*io_service));
                 try
@@ -160,7 +187,6 @@ void Asio_TCP_Server::AcceptConnection() noexcept
                     socket_->non_blocking(true);
                     last_message_read_time = std::chrono::system_clock::now();
 
-                    isServerConnected = true;
                     listOfclients.emplace_back(std::move(*socket_));
                     socket_.reset();
                 }
@@ -170,10 +196,7 @@ void Asio_TCP_Server::AcceptConnection() noexcept
                     socket_.reset();
                 }
         }
-        else if(isServerConnected)
-        {
 
-        }
         else
         {
             throw std::runtime_error("TCP Server: Incorrect usage of Accept Connection - Please listen before accepting \n");
@@ -191,37 +214,23 @@ void Asio_TCP_Server::AcceptConnection() noexcept
 
 void Asio_TCP_Server::DeallocateConnection(asio::error_code &es)
 {
-    if(isServerConnected)
-    {
-        socket_->close();
-        socket_->release(es);
-        acceptor_->close();
-        isServerConnected = false;
-        return;
-    }
-    else
-    {
-        return;
-    }
-    
+    socket_->close();
+    socket_->release(es);
+    acceptor_->close();
+    isServerConnected = false;
+    return;
 }
 
 void Asio_TCP_Server::ListenForConnections() 
 {
-    if(!isServerConnected)
-    {
-        io_service = std::shared_ptr<asio::io_service>(new asio::io_service());
-        acceptor_  = std::shared_ptr<asio::ip::tcp::acceptor>(new asio::ip::tcp::acceptor(*io_service, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), portNum)));
-        // Listen puts the accpetor into a state where it listens for multiple connections
-        acceptor_->non_blocking(isBlockingMode);
-        acceptor_->listen(backlogsize);
-        return;
-    }
 
-    else
-    {
-        return;
-    }
+    io_service = std::shared_ptr<asio::io_service>(new asio::io_service());
+    acceptor_  = std::shared_ptr<asio::ip::tcp::acceptor>(new asio::ip::tcp::acceptor(*io_service, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), portNum)));
+    // Listen puts the accpetor into a state where it listens for multiple connections
+    acceptor_->non_blocking(isBlockingMode);
+    acceptor_->listen(backlogsize);
+
+    return;
 }
 
 std::array<char , 1<<16> * Asio_TCP_Server::GetReadBufferPointer()
