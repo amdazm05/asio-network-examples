@@ -26,6 +26,7 @@ void Asio_TCP_Server::WriteToClient(char * buffer, size_t sizeofBuffer) noexcept
 {
 
     asio::error_code es;
+    writeLock(_mtx);
     try
     {
         // listOfclients[0].non_blocking(isBlockingMode);
@@ -61,6 +62,7 @@ std::size_t  Asio_TCP_Server::ReadFromClient(char * buffer) noexcept
 {
     receptionByteCount =-1;   
     asio::error_code es;
+    readLock(_mtx);
     try
     {
         if(listOfclients.size())
@@ -165,6 +167,7 @@ char* Asio_TCP_Server::listen_and_reply_once(char * bufferToWrite, size_t sizeof
 
 void Asio_TCP_Server::AcceptConnection() noexcept
 {
+    uniqueLock(_mtx);
     try
     {
         if((acceptor_.get()!=nullptr))

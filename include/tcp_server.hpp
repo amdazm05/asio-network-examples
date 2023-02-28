@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <array>
+#include <shared_mutex>
 
 // Disable one of these depending on what compiler you're working with
 #define ASIO_STANDALONE 
@@ -13,7 +14,6 @@
 #define ASIO_HAS_STD_TYPE_TRAITS
 //including asio header only implementation
 #include "asio.hpp"
-
 
 class Asio_TCP_Server
 {
@@ -34,6 +34,7 @@ class Asio_TCP_Server
         void SetBlockingCall(bool condition);
         bool GetServerConnectionStatus();
         void SetServerDisconnectionTimeout(int seconds);
+        void LaunchConcurrentReadWriteThreads();
         ~Asio_TCP_Server();
     private:
         int portNum;
@@ -50,11 +51,15 @@ class Asio_TCP_Server
         std::array<char , 1<<16> _broadcastbuffer;
         std::array<char , 1<<16> _receptionbuffer;
         std::size_t receptionByteCount;
-        
         std::shared_ptr<asio::io_service> io_service;
         std::shared_ptr<asio::ip::tcp::socket> socket_;
         std::shared_ptr<asio::ip::tcp::acceptor> acceptor_;
         std::vector<asio::ip::tcp::socket> listOfclients;
+
+        std::shared_mutex _mtx;
+        using writeLock     = std::unique_lock<std::shared_mutex>;
+        using readLock      = std::shared_lock<std::shared_mutex>;
+        using uniqueLock    = std::unique_lock<std::shared_mutex>;
 };
 
 #endif
