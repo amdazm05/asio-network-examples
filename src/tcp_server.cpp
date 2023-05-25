@@ -69,9 +69,9 @@ std::size_t  Asio_TCP_Server::ReadFromClient(char * buffer) noexcept
         {
             for(int i= 0 ; i < listOfclients.size() ;i++)
             {
-                if(listOfclients[0].available())
+                if(listOfclients[i].available())
                 {
-                    receptionByteCount= listOfclients[0].read_some(asio::buffer(_receptionbuffer), es);
+                    receptionByteCount= listOfclients[i].read_some(asio::buffer(_receptionbuffer), es);
                     if (es && es == asio::error::eof)
                     {
                         isServerConnected =false;
@@ -80,6 +80,8 @@ std::size_t  Asio_TCP_Server::ReadFromClient(char * buffer) noexcept
                     }		
                     buffer = _receptionbuffer.data();
                     last_message_read_time = std::chrono::system_clock::now();
+                    //requires that client be read in order of added priority 
+                    break;
                 }
                 else 
                 {
