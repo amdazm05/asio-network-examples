@@ -30,7 +30,7 @@ class Asio_TCP_Server
         void DeallocateConnection(asio::error_code &es);
         void WriteToClient(char * buffer, size_t sizeofBuffer) noexcept;
         std::size_t  ReadFromClient(char * buffer) noexcept;
-		std::array<char , 1<<16> * GetReadBufferPointer();
+		std::shared_ptr<std::array<char , 1<<16>> GetReadBufferPointer();
         void SetBlockingCall(bool condition);
         bool GetServerConnectionStatus();
         void SetServerDisconnectionTimeout(int seconds);

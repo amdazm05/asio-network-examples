@@ -238,9 +238,9 @@ void Asio_TCP_Server::ListenForConnections()
     return;
 }
 
-std::array<char , 1<<16> * Asio_TCP_Server::GetReadBufferPointer()
+std::shared_ptr<std::array<char , 1<<16>> Asio_TCP_Server::GetReadBufferPointer()
 {
-	return &(_receptionbuffer);
+	return std::shared_ptr<std::array<char , 1<<16>>(&(_receptionbuffer));
 }
 
 void Asio_TCP_Server::SetServerDisconnectionTimeout(int seconds)
