@@ -18,7 +18,6 @@ Asio_TCP_Server::Asio_TCP_Server(int PortNumToBind,int timeOut,int backLogSize) 
 }
 Asio_TCP_Server::Asio_TCP_Server(int PortNumToBind, int BackLogsize): Asio_TCP_Server(PortNumToBind)
 {
-    listOfclients.reserve(backlogsize);
     backlogsize=BackLogsize;
 }
 
@@ -71,6 +70,7 @@ std::size_t  Asio_TCP_Server::ReadFromClient(char * buffer) noexcept
             {
                 if(listOfclients[i].available())
                 {
+                     std::cout<<"Reading bytes from  : "<<listOfclients[i].remote_endpoint().address().to_string()<<":"<<listOfclients[i].remote_endpoint().port()<<" bytes available :"<<listOfclients[i].available()<<std::endl;
                     receptionByteCount= listOfclients[i].read_some(asio::buffer(_receptionbuffer), es);
                     if (es && es == asio::error::eof)
                     {
@@ -191,7 +191,8 @@ void Asio_TCP_Server::AcceptConnection() noexcept
 
                     socket_->non_blocking(true);
                     last_message_read_time = std::chrono::system_clock::now();
-
+                    std::cout<<"Connected to : "<<socket_->remote_endpoint().address().to_string()
+                        <<":"<<socket_->remote_endpoint().port()<<std::endl;
                     listOfclients.emplace_back(std::move(*socket_));
                     socket_.reset();
                 }
