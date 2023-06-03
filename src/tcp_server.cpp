@@ -5,7 +5,7 @@ Asio_TCP_Server::Asio_TCP_Server(int PortNum):
 {
         isServerConnected= false;
         isThereAnyNewData= false;
-        disconnectionTimeout = 100;
+        disconnectionTimeout = 10000;
         // By default this is blocking
         isBlockingMode = true; 
 }
@@ -75,17 +75,19 @@ std::size_t  Asio_TCP_Server::ReadFromClient(char * buffer) noexcept
                 }
                 catch(const std::exception& e)
                 {
+                    listOfclients[i].close();
                     listOfclients.erase(listOfclients.begin()+i);
                     std::cout<<"Client disconnected"<<std::endl;
                 }
                 if(isDataPresent)
                 {
-                     std::cout<<"Reading bytes from  : "<<listOfclients[i].remote_endpoint().address().to_string()<<":"<<listOfclients[i].remote_endpoint().port()<<" bytes available :"<<listOfclients[i].available()<<std::endl;
+                    std::cout<<"Reading bytes from  : "<<listOfclients[i].remote_endpoint().address().to_string()<<":"<<listOfclients[i].remote_endpoint().port()<<" bytes available :"<<listOfclients[i].available()<<std::endl;
                     receptionByteCount= listOfclients[i].read_some(asio::buffer(_receptionbuffer), es);
                     if (es && es == asio::error::eof)
                     {
                         isServerConnected =false;
-                        listOfclients.pop_back();
+                        listOfclients[i].close();
+                        listOfclients.erase(listOfclients.begin()+i);
                         throw std::runtime_error("TCP Server: Nothing to Read");
                     }		
                     buffer = _receptionbuffer.data();
@@ -99,13 +101,9 @@ std::size_t  Asio_TCP_Server::ReadFromClient(char * buffer) noexcept
                     size_t timediff = std::chrono::duration_cast<std::chrono::seconds>(no_message_read_time - last_message_read_time).count();
                     if(timediff > disconnectionTimeout)
                     {   
-                        for(int i=0 ; i < listOfclients.size();i++)
+                        //Do we need a map? for logging time?
+                        if(listOfclients.size())
                         {
-                            receptionByteCount= listOfclients[i].read_some(asio::buffer(_receptionbuffer), es);
-                            if(es == asio::error::eof)
-                            {
-                                throw std::runtime_error("TCP Server: Closing the socket" + listOfclients[i].local_endpoint().address().to_string());
-                            }
                             listOfclients[i].close();
                             listOfclients.erase(listOfclients.begin()+i);
                         }
