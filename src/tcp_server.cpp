@@ -66,9 +66,19 @@ std::size_t  Asio_TCP_Server::ReadFromClient(char * buffer) noexcept
     {
         if(listOfclients.size())
         {
+            bool isDataPresent = false;
             for(int i= 0 ; i < listOfclients.size() ;i++)
             {
-                if(listOfclients[i].available())
+                try
+                {
+                   (isDataPresent = listOfclients[i].available() >0);
+                }
+                catch(const std::exception& e)
+                {
+                    listOfclients.erase(listOfclients.begin()+i);
+                    std::cout<<"Client disconnected"<<std::endl;
+                }
+                if(isDataPresent)
                 {
                      std::cout<<"Reading bytes from  : "<<listOfclients[i].remote_endpoint().address().to_string()<<":"<<listOfclients[i].remote_endpoint().port()<<" bytes available :"<<listOfclients[i].available()<<std::endl;
                     receptionByteCount= listOfclients[i].read_some(asio::buffer(_receptionbuffer), es);
@@ -97,7 +107,7 @@ std::size_t  Asio_TCP_Server::ReadFromClient(char * buffer) noexcept
                                 throw std::runtime_error("TCP Server: Closing the socket" + listOfclients[i].local_endpoint().address().to_string());
                             }
                             listOfclients[i].close();
-                            listOfclients.pop_back();
+                            listOfclients.erase(listOfclients.begin()+i);
                         }
                     }
                 }
