@@ -66,9 +66,9 @@ std::size_t  Asio_TCP_Server::ReadFromClient(char * buffer) noexcept
     {
         if(listOfclients.size())
         {
-            bool isDataPresent = false;
             for(int i= 0 ; i < listOfclients.size() ;i++)
             {
+                bool isDataPresent = false;
                 try
                 {
                    (isDataPresent = listOfclients[i].available() >0);
