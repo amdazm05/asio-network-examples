@@ -71,13 +71,18 @@ std::size_t  Asio_TCP_Server::ReadFromClient(char * buffer) noexcept
                 bool isDataPresent = false;
                 try
                 {
-                   (isDataPresent = listOfclients[i].available() >0);
+                    isDataPresent = listOfclients[i].available() >0;
+                    if(!listOfclients[i].is_open())
+                    {
+                        listOfclients[i].close();
+                        listOfclients.erase(listOfclients.begin()+i);
+                    }
+
                 }
                 catch(const std::exception& e)
                 {
                     listOfclients[i].close();
                     listOfclients.erase(listOfclients.begin()+i);
-                    std::cout<<"Client disconnected"<<std::endl;
                 }
                 if(isDataPresent)
                 {
