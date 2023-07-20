@@ -5,6 +5,7 @@ add_library(
     ${PROJECT_NAME}
     STATIC
     ${PROJECT_SOURCE_DIR}/src/tcp_server.cpp
+    ${PROJECT_SOURCE_DIR}/src/udp_server.cpp
 )
 
 target_include_directories(
@@ -70,5 +71,18 @@ if(EXAMPLES)
         server_poll_and_read
     PUBLIC
         ${PROJECT_NAME}
+
+    
     )
 endif(EXAMPLES)
+
+add_executable(
+        udp_example
+        ./examples/barebone/udp_server_ex.cc
+    )
+
+    target_link_libraries(
+        udp_example
+    PUBLIC
+        ${PROJECT_NAME}
+    )
