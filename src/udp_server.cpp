@@ -6,10 +6,10 @@ Asio_UDP_Server::Asio_UDP_Server(int portNumber, bool isBlockingMode):
     _socket.non_blocking(isBlockingMode);
 }
 
-void Asio_UDP_Server::WriteToClient(std::shared_ptr<const char> buffer,size_t bufferSize, std::string && ipDestinationPort, int destinationPort)
+void Asio_UDP_Server::WriteToClient(const char * buffer,size_t bufferSize, std::string && ipDestinationPort, int destinationPort)
 {
     asio::ip::udp::endpoint endpoint(asio::ip::address::from_string(ipDestinationPort), destinationPort);
-    _socket.send_to(asio::buffer(buffer.get(),bufferSize),endpoint);
+    _socket.send_to(asio::buffer(buffer,bufferSize),endpoint);
 }
 int Asio_UDP_Server::ReadFromClient()
 {

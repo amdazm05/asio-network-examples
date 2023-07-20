@@ -2,7 +2,7 @@
 int main()
 {
     std::string broadCastMessage = "DEADBEEFBEEFFEED";
-    std::shared_ptr<const char> _bufferPtr = std::shared_ptr<const char>(broadCastMessage.c_str());
+    const char* _bufferPtr = broadCastMessage.c_str();
     Asio_UDP_Server Server(9100);
     while(1)
     {
