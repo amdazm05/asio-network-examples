@@ -8,8 +8,8 @@ class Asio_UDP_Server
 {
     public:
         Asio_UDP_Server()=delete;
-        Asio_UDP_Server(int portNumber, std::string && ip);
-        void WriteToClient(std::shared_ptr<char> buffer,size_t bufferSize);
+        Asio_UDP_Server(int portNumber, bool isBlockingMode=true);
+        void WriteToClient(std::shared_ptr<const char> buffer,size_t bufferSize,std::string && ipDestinationPort, int DestinationPort);
         int ReadFromClient();
         char * GetReadBufferPointer();
 
@@ -21,6 +21,9 @@ class Asio_UDP_Server
 
         asio::io_context _io_context;
         asio::ip::udp::socket _socket;
+
+        std::string _destip;
+        int _port;
 
 };
 
