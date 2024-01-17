@@ -12,10 +12,10 @@ void Asio_UDP_Server::WriteToClient(const char * buffer,size_t bufferSize, std::
     _socket.send_to(asio::buffer(buffer,bufferSize),endpoint);
 }
 int Asio_UDP_Server::ReadFromClient()
-{
-
+{   
+    return {};
 }
 char * Asio_UDP_Server::GetReadBufferPointer()
 {
-
+    return nullptr;
 }
